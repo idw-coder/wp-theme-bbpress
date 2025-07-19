@@ -2,33 +2,3 @@
 Theme Name:     Twenty Sixteen Child
 Template:       twentysixteen
 */
-
-html {
-	margin: 0;
-	padding: 0;
-}
-
-body {
-	background-color: #f1f1f1;
-	box-sizing: border-box;
-}
-
-.site {
-  min-height: 100vh;
-  margin: 0;
-  background-color: #fff;
-}
-
-@media screen and (min-width: 44.375em) {
-  .site {
-    margin: 10px;
-    min-height: calc(100vh - 20px); /* 上下21pxずつ余白分を引く */
-  }
-}
-
-@media screen and (min-width: 61.5625em) {
-  .site {
-    margin: 20px;
-    min-height: calc(100vh - 40px); /* 上下40pxずつ余白分を引く */
-  }
-}
