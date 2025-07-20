@@ -9,9 +9,9 @@ function enqueue_parent_theme_styles()
     );
     wp_enqueue_style(
         'child-style',
-        get_stylesheet_directory_uri() . '/assetes/style.css',
+        get_stylesheet_directory_uri() . '/assets/style.css',
         array(),
-        filemtime(get_stylesheet_directory() . '/assetes/style.css')
+        filemtime(get_stylesheet_directory() . '/assets/style.css')
     );
 }
 add_action('wp_enqueue_scripts', 'enqueue_parent_theme_styles');
@@ -19,21 +19,6 @@ add_action('wp_enqueue_scripts', 'enqueue_parent_theme_styles');
 /**
  * bbPressシードデータファイルを読み込み
  */
-add_action('wp_loaded', function () {
-    error_log('[TEST] wp_loaded実行されました');
-});
-// add_action('after_setup_theme', function () {
-//     $path = get_stylesheet_directory() . '/includes/bbpress-seed.php';
-//     error_log('[DEBUG] シードファイルパス: ' . $path);
-//     error_log('[DEBUG] ファイル存在: ' . (file_exists($path) ? 'YES' : 'NO'));
-
-//     if (file_exists($path)) {
-//         require_once $path;
-//         error_log('[DEBUG] シードファイル読み込み完了');
-//     } else {
-//         error_log('[DEBUG] シードファイルが見つかりません');
-//     }
-// });
 add_action('after_setup_theme', function () {
     // bbPressシード処理を遅延読み込み
     require_once get_stylesheet_directory() . '/includes/bbpress-seed.php';
@@ -42,6 +27,7 @@ add_action('after_setup_theme', function () {
 add_action('init', function () {
     // error_log('bbPress存在チェック: ' . (function_exists('bbp_is_forum') ? 'YES' : 'NO'));
 });
+
 /**
  * テンプレートファイル内のハードコードされた文字列も変更
  */

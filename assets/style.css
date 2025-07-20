@@ -1,6 +1,18 @@
 /**
  * テーマのCSS
  */
+body,
+button,
+input,
+select,
+textarea {
+	color: #1a1a1a;
+  font-family: "Roboto", "Yu Gothic", sans-serif;
+	font-size: 16px;
+	font-size: 1rem;
+	line-height: 1.75;
+}
+
 html {
   margin: 0;
   padding: 0;
@@ -35,5 +47,5 @@ body {
  * フォーラムのCSS
  */
 #bbpress-forums {
-  font-family: "Roboto", sans-serif;
+  font-family: "Roboto", "Yu Gothic", sans-serif;
 }

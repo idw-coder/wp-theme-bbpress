@@ -138,6 +138,15 @@ function seed_bbpress_forums()
                     ]);
                 }
             }
+            // bbp_update_forum($forum_id); は、
+            // wp_posts とは別の wp_postmeta テーブルに統計情報を保存 → 一覧場面のトピック数などを更新
+            bbp_update_forum_topic_count($forum_id);
+            bbp_update_forum_reply_count($forum_id);
+            bbp_update_forum_subforum_count($forum_id);
+            bbp_update_forum_last_topic_id($forum_id);
+            bbp_update_forum_last_reply_id($forum_id);
+
+            error_log('[SEED] フォーラム統計再構築完了: ' . $forum_id);
         }
     }
 
