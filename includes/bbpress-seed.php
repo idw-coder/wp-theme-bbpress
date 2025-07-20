@@ -53,14 +53,14 @@ function seed_bbpress_forums()
 
     $structure = require $structure_path;
 
-    $users = get_users(['fields' => 'all_with_meta']);
-    if (empty($users)) {
-        error_log('[SEED] 投稿者ユーザーが存在しないためシード中止');
-        return;
-    }
-    $author = $users[array_rand($users)];
+    $user_ids = wp_list_pluck(get_users(['fields' => ['ID']]), 'ID');
+    error_log('[SEED] 投稿者ユーザー: ' . implode(', ', $user_ids));
+
 
     foreach ($structure as $cat_title => $forums) {
+        // 投稿者ランダム決定（カテゴリ）
+        $author_id = $user_ids[array_rand($user_ids)];
+
         // カテゴリ重複チェック（WP_Query使用）
         $existing_cat = new WP_Query([
             'post_type' => 'forum',
@@ -79,7 +79,7 @@ function seed_bbpress_forums()
             'post_content' => $cat_title . ' に関するカテゴリです。',
             'post_status'  => 'publish',
             'post_parent'  => 0,
-            'post_author'  => $author->ID,
+            'post_author'  => $author_id,
         ]);
         if (!$cat_id || is_wp_error($cat_id)) {
             error_log("[SEED] カテゴリ作成失敗: $cat_title");
@@ -97,6 +97,9 @@ function seed_bbpress_forums()
         }
 
         foreach ($forums as $forum_title => $topics) {
+            // 投稿者ランダム決定（フォーラム）
+            $author_id = $user_ids[array_rand($user_ids)];
+
             // フォーラム重複チェック（WP_Query使用）
             $existing_forum = new WP_Query([
                 'post_type' => 'forum',
@@ -115,26 +118,32 @@ function seed_bbpress_forums()
                 'post_content' => $forum_title . ' に関するフォーラムです。',
                 'post_status'  => 'publish',
                 'post_parent'  => $cat_id,
-                'post_author'  => $author->ID,
+                'post_author'  => $author_id,
             ]);
             if (!$forum_id || is_wp_error($forum_id)) continue;
 
             foreach ($topics as $topic_title => $replies) {
+                // 投稿者ランダム決定（トピック）
+                $author_id = $user_ids[array_rand($user_ids)];
+
                 $topic_id = bbp_insert_topic([
                     'post_title'   => $topic_title,
                     'post_content' => $topic_title . ' について議論しましょう。',
                     'post_status'  => 'publish',
                     'post_parent'  => $forum_id,
-                    'post_author'  => $author->ID,
+                    'post_author'  => $author_id,
                 ]);
                 if (!$topic_id || is_wp_error($topic_id)) continue;
 
                 foreach ($replies as $reply_content) {
+                    // 投稿者ランダム決定（返信）
+                    $author_id = $user_ids[array_rand($user_ids)];
+
                     bbp_insert_reply([
                         'post_content' => $reply_content,
                         'post_status'  => 'publish',
                         'post_parent'  => $topic_id,
-                        'post_author'  => $author->ID,
+                        'post_author'  => $author_id,
                     ]);
                 }
             }
