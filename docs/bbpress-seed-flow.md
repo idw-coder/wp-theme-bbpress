@@ -3,6 +3,14 @@
 
 
 ---
+```
+twentysixteen-child/
+├── includes/
+│   ├── bbpress-seed.php        ← 実行本体
+│   └── bbpress-structure.php   ← データ定義（別ファイル）
+
+```
+---
 
 ## 処理フロー（Mermaid 図）
 
@@ -55,5 +63,5 @@ bbPress は `forum`, `topic`, `reply` をカスタム投稿タイプとして扱
 | パラメータ             | 効果                          |
 |------------------------|-------------------------------|
 | `?run_bbp_seed=1`      | データ再投入                  |
-
+| `?delete_all_bbp` | |
 ---

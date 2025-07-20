@@ -4,67 +4,163 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// bbPressのAPIを使用するため bbPressが完全にロードされた後に実行
-add_action('bbp_loaded', function () {
-    if (current_user_can('administrator') && !get_option('bbpress_demo_seeded')) {
-        seed_bbpress_forums();
-    }
-});
-
-// URL叩き用の再実行フック（任意）
-add_action('admin_init', function () {
+// wp_loadedフックでシード処理実行
+add_action('wp_loaded', function () {
     if (!current_user_can('administrator')) return;
+    if (!function_exists('bbp_insert_forum')) return;
 
+    // 明示的な全削除
+    // http://localhost:8080/wp-admin/?delete_all_bbp
+    if (isset($_GET['delete_all_bbp'])) {
+        delete_all_bbpress_content();
+        delete_option('bbpress_demo_seeded');
+        error_log('[SEED] 全ての bbPress データを削除しました。');
+        echo '<a href="?run_bbp_seed">再投入</a> | ';
+        echo '<a href="?">戻る</a>';
+        wp_die('全ての bbPress データを削除しました。');
+    }
+
+    // 明示的な再投入
     if (isset($_GET['run_bbp_seed'])) {
         delete_option('bbpress_demo_seeded');
         seed_bbpress_forums();
+        error_log('[SEED] シードデータ作成完了');
+        echo '<a href="?">戻る</a>';
         wp_die('bbPressシードデータの作成が完了しました。');
     }
+
+    // 通常の初回1回だけ自動投入
+    // if (!get_option('bbpress_demo_seeded')) {
+    //     error_log('[SEED] シードデータ自動投入');
+    //     seed_bbpress_forums();
+    // }
 });
 
+// シード処理本体
 function seed_bbpress_forums()
 {
+    // 重複防止：既にシードされている場合は終了
+    if (get_option('bbpress_demo_seeded')) {
+        error_log('[SEED] 既にシード済みのため処理をスキップ');
+        return;
+    }
+
+    $structure_path = trailingslashit(get_stylesheet_directory()) . 'includes/bbpress-structure.php';
+    if (!file_exists($structure_path)) {
+        error_log('[SEED] 構造ファイルが存在しません: ' . $structure_path);
+        return;
+    }
+
+    $structure = require $structure_path;
+
     $users = get_users(['fields' => 'all_with_meta']);
     if (empty($users)) {
-        error_log('[SEED] ユーザーが存在しないため中断');
+        error_log('[SEED] 投稿者ユーザーが存在しないためシード中止');
         return;
     }
+    $author = $users[array_rand($users)];
 
-    $forum_id = bbp_insert_forum([
-        'post_title'   => 'テストフォーラム',
-        'post_content' => 'テスト用のフォーラムです。',
-        'post_status'  => 'publish',
-        'post_parent'  => 0,
-        'post_author'  => $users[0]->ID,
-    ]);
-    if (!$forum_id || is_wp_error($forum_id)) {
-        error_log('[SEED] forum error: ' . (is_wp_error($forum_id) ? $forum_id->get_error_message() : 'unknown'));
-        return;
-    }
+    foreach ($structure as $cat_title => $forums) {
+        // カテゴリ重複チェック（WP_Query使用）
+        $existing_cat = new WP_Query([
+            'post_type' => 'forum',
+            'title' => $cat_title,
+            'posts_per_page' => 1,
+            'fields' => 'ids'
+        ]);
+        if ($existing_cat->have_posts()) {
+            error_log("[SEED] カテゴリ '{$cat_title}' は既に存在するためスキップ");
+            wp_reset_postdata();
+            continue;
+        }
 
-    $topic_id = bbp_insert_topic([
-        'post_title'   => 'テストトピック',
-        'post_content' => 'これはテストトピックの内容です。',
-        'post_status'  => 'publish',
-        'post_parent'  => $forum_id,
-        'post_author'  => $users[0]->ID,
-    ]);
-    if (!$topic_id || is_wp_error($topic_id)) {
-        error_log('[SEED] topic error: ' . (is_wp_error($topic_id) ? $topic_id->get_error_message() : 'unknown'));
-        return;
-    }
+        $cat_id = bbp_insert_forum([
+            'post_title'   => $cat_title,
+            'post_content' => $cat_title . ' に関するカテゴリです。',
+            'post_status'  => 'publish',
+            'post_parent'  => 0,
+            'post_author'  => $author->ID,
+        ]);
+        if (!$cat_id || is_wp_error($cat_id)) {
+            error_log("[SEED] カテゴリ作成失敗: $cat_title");
+            if (is_wp_error($cat_id)) {
+                error_log("[SEED] エラー: " . $cat_id->get_error_message());
+            }
+            continue;
+        }
 
-    $reply_id = bbp_insert_reply([
-        'post_content' => 'これはテスト返信です。',
-        'post_status'  => 'publish',
-        'post_parent'  => $topic_id,
-        'post_author'  => $users[0]->ID,
-    ]);
-    if (!$reply_id || is_wp_error($reply_id)) {
-        error_log('[SEED] reply error: ' . (is_wp_error($reply_id) ? $reply_id->get_error_message() : 'unknown'));
-        return;
+        // フォーラムタイプをカテゴリに設定（関数の存在チェック）
+        if (function_exists('bbp_update_forum_type')) {
+            bbp_update_forum_type($cat_id, 'category');
+        } else {
+            update_post_meta($cat_id, '_bbp_forum_type', 'category');
+        }
+
+        foreach ($forums as $forum_title => $topics) {
+            // フォーラム重複チェック（WP_Query使用）
+            $existing_forum = new WP_Query([
+                'post_type' => 'forum',
+                'title' => $forum_title,
+                'posts_per_page' => 1,
+                'fields' => 'ids'
+            ]);
+            if ($existing_forum->have_posts()) {
+                error_log("[SEED] フォーラム '{$forum_title}' は既に存在するためスキップ");
+                wp_reset_postdata();
+                continue;
+            }
+
+            $forum_id = bbp_insert_forum([
+                'post_title'   => $forum_title,
+                'post_content' => $forum_title . ' に関するフォーラムです。',
+                'post_status'  => 'publish',
+                'post_parent'  => $cat_id,
+                'post_author'  => $author->ID,
+            ]);
+            if (!$forum_id || is_wp_error($forum_id)) continue;
+
+            foreach ($topics as $topic_title => $replies) {
+                $topic_id = bbp_insert_topic([
+                    'post_title'   => $topic_title,
+                    'post_content' => $topic_title . ' について議論しましょう。',
+                    'post_status'  => 'publish',
+                    'post_parent'  => $forum_id,
+                    'post_author'  => $author->ID,
+                ]);
+                if (!$topic_id || is_wp_error($topic_id)) continue;
+
+                foreach ($replies as $reply_content) {
+                    bbp_insert_reply([
+                        'post_content' => $reply_content,
+                        'post_status'  => 'publish',
+                        'post_parent'  => $topic_id,
+                        'post_author'  => $author->ID,
+                    ]);
+                }
+            }
+        }
     }
 
     update_option('bbpress_demo_seeded', 1);
-    error_log('[SEED] 完了');
+}
+
+// 全削除関数
+function delete_all_bbpress_content()
+{
+    // フォーラム、トピック、返信を全削除
+    $forums = get_posts(['post_type' => 'forum', 'numberposts' => -1, 'post_status' => 'any']);
+    $topics = get_posts(['post_type' => 'topic', 'numberposts' => -1, 'post_status' => 'any']);
+    $replies = get_posts(['post_type' => 'reply', 'numberposts' => -1, 'post_status' => 'any']);
+
+    foreach ($forums as $forum) {
+        wp_delete_post($forum->ID, true);
+    }
+    foreach ($topics as $topic) {
+        wp_delete_post($topic->ID, true);
+    }
+    foreach ($replies as $reply) {
+        wp_delete_post($reply->ID, true);
+    }
+
+    error_log('[SEED] 全データ削除完了');
 }
