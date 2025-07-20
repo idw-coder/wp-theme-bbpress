@@ -21,6 +21,7 @@ add_action('wp_loaded', function () {
     }
 
     // 明示的な再投入
+    // http://localhost:8080/wp-admin/?run_bbp_seed
     if (isset($_GET['run_bbp_seed'])) {
         delete_option('bbpress_demo_seeded');
         seed_bbpress_forums();

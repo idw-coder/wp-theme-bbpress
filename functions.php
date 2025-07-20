@@ -23,11 +23,13 @@ add_action('after_setup_theme', function () {
     // bbPressシード処理を遅延読み込み
     require_once get_stylesheet_directory() . '/includes/bbpress-seed.php';
 });
-// functions.phpの最下部に追加してテスト
-add_action('init', function () {
-    // error_log('bbPress存在チェック: ' . (function_exists('bbp_is_forum') ? 'YES' : 'NO'));
-});
 
+/**
+ * bbPressデバッグ機能
+ */
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    require_once get_stylesheet_directory() . '/includes/bbpress-template-debugger.php';
+}
 /**
  * テンプレートファイル内のハードコードされた文字列も変更
  */
@@ -60,7 +62,6 @@ function custom_bbp_text_strings($translated_text, $text, $domain)
     return $translated_text;
 }
 add_filter('gettext', 'custom_bbp_text_strings', 20, 3);
-
 
 /**
  * ===========================================================
