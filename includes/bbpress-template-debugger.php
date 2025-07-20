@@ -97,14 +97,12 @@ function bbp_debug_output_fixed()
                 color: white;
                 padding: 10px 12px;
                 font-weight: bold;
-                border-bottom: 2px solid rgba(255, 255, 255, 0.2);
             }
 
             .bbp-debug-template {
                 background: rgba(231, 76, 60, 0.5);
                 color: white;
                 padding: 8px 12px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
 
             .bbp-debug-template:last-child {
@@ -118,7 +116,6 @@ function bbp_debug_output_fixed()
 
             .bbp-debug-path {
                 font-size: 10px;
-                opacity: 0.8;
                 word-break: break-all;
             }
 
@@ -133,10 +130,6 @@ function bbp_debug_output_fixed()
                 opacity: 0.7;
             }
 
-            .bbp-debug-close:hover {
-                opacity: 1;
-            }
-
             .bbp-debug-toggle {
                 position: fixed;
                 top: 10%;
@@ -146,14 +139,9 @@ function bbp_debug_output_fixed()
                 border: none;
                 padding: 8px 12px;
                 cursor: pointer;
-                font-family: monospace;
                 font-size: 11px;
                 z-index: 99998;
                 display: none;
-            }
-
-            .bbp-debug-toggle:hover {
-                background: rgb(52, 73, 94, 0.5);
             }
         </style>
 

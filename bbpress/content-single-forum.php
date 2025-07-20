@@ -10,6 +10,11 @@
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
+// デバッグ用ボーダー開始
+if (defined('WP_DEBUG') && WP_DEBUG && is_user_logged_in() && current_user_can('administrator')) {
+	echo '<div style="border: 1px solid #ff0000; position: relative;">';
+	echo '<div style="position: absolute; top: -16px; left: 0; color: rgb(255, 0, 0, 0.5); font-size: 8px; font-weight: bold; z-index: 1000;">content-single-forum.php</div>';
+}
 ?>
 
 <div id="bbpress-forums" class="bbpress-wrapper">
@@ -26,7 +31,8 @@ defined('ABSPATH') || exit;
 
 	<?php else : ?>
 
-		<?php bbp_single_forum_description(); ?>
+		<?php // bbp_single_forum_description(); 
+		?>
 
 		<?php if (bbp_has_forums()) : ?>
 
@@ -57,3 +63,8 @@ defined('ABSPATH') || exit;
 	<?php do_action('bbp_template_after_single_forum'); ?>
 
 </div>
+<?php
+// デバッグ用ボーダー終了
+if (defined('WP_DEBUG') && WP_DEBUG && is_user_logged_in() && current_user_can('administrator')) {
+	echo '</div>';
+}

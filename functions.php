@@ -64,6 +64,83 @@ function custom_bbp_text_strings($translated_text, $text, $domain)
 add_filter('gettext', 'custom_bbp_text_strings', 20, 3);
 
 /**
+ * 返信の管理リンクから不要なものを削除
+ */
+add_filter('bbp_get_reply_admin_links', 'custom_reply_admin_links', 5, 2);
+function custom_reply_admin_links($links, $reply_id)
+{
+    // 文字列の場合（実際のケース）
+    if (is_string($links)) {
+        $new_links = array();
+
+        // 編集リンクを抽出
+        if (preg_match('/<a[^>]*class="[^"]*bbp-reply-edit-link[^"]*"[^>]*>.*?<\/a>/i', $links, $matches)) {
+            $new_links[] = $matches[0];
+        }
+
+        // ゴミ箱リンクを抽出
+        if (preg_match('/<a[^>]*class="[^"]*bbp-reply-trash-link[^"]*"[^>]*>.*?<\/a>/i', $links, $matches)) {
+            $new_links[] = $matches[0];
+        }
+
+        // 返信リンクを抽出
+        if (preg_match('/<a[^>]*class="[^"]*bbp-reply-to-link[^"]*"[^>]*>.*?<\/a>/i', $links, $matches)) {
+            $new_links[] = $matches[0];
+        }
+
+        // 新しいHTMLを生成
+        if (!empty($new_links)) {
+            return '<span class="bbp-admin-links">' . implode(' | ', $new_links) . '</span>';
+        } else {
+            return '';
+        }
+    }
+
+    return $links;
+}
+
+/**
+ * トピックの管理リンク：編集、クローズ、ゴミ箱、返信のみ表示（文字列対応版）
+ */
+add_filter('bbp_get_topic_admin_links', 'custom_topic_admin_links', 5, 2);
+function custom_topic_admin_links($links, $topic_id)
+{
+    // 文字列の場合（実際のケース）
+    if (is_string($links)) {
+        $new_links = array();
+
+        // 編集リンクを抽出
+        if (preg_match('/<a[^>]*class="[^"]*bbp-topic-edit-link[^"]*"[^>]*>.*?<\/a>/i', $links, $matches)) {
+            $new_links[] = $matches[0];
+        }
+
+        // クローズリンクを抽出
+        if (preg_match('/<a[^>]*class="[^"]*bbp-topic-close-link[^"]*"[^>]*>.*?<\/a>/i', $links, $matches)) {
+            $new_links[] = $matches[0];
+        }
+
+        // ゴミ箱リンクを抽出
+        if (preg_match('/<a[^>]*class="[^"]*bbp-topic-trash-link[^"]*"[^>]*>.*?<\/a>/i', $links, $matches)) {
+            $new_links[] = $matches[0];
+        }
+
+        // 返信リンクを抽出
+        if (preg_match('/<a[^>]*class="[^"]*bbp-reply-to-link[^"]*"[^>]*>.*?<\/a>/i', $links, $matches)) {
+            $new_links[] = $matches[0];
+        }
+
+        // 新しいHTMLを生成
+        if (!empty($new_links)) {
+            return '<span class="bbp-admin-links">' . implode(' | ', $new_links) . '</span>';
+        } else {
+            return '';
+        }
+    }
+
+    return $links;
+}
+
+/**
  * ===========================================================
  *  bbPress いいね 
  *  ===========================================================

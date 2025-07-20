@@ -10,9 +10,11 @@
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
-?>
-<p style="color: aqua;">form-topic.php</p>
-<?php
+if (defined('WP_DEBUG') && WP_DEBUG && is_user_logged_in() && current_user_can('administrator')) {
+	echo '<div style="border: 1px solid #ff0000; position: relative;">';
+	echo '<div style="position: absolute; top: -16px; left: 0; color: rgb(255, 0, 0, 0.5); font-size: 8px; font-weight: bold; z-index: 1000;">form-topic.php</div>';
+}
+
 if (! bbp_is_single_forum()) : ?>
 	<div id="bbpress-forums" class="bbpress-wrapper">
 
@@ -262,3 +264,8 @@ if (! bbp_is_single_forum()) : ?>
 	</div>
 
 <?php endif;
+
+	if (defined('WP_DEBUG') && WP_DEBUG && is_user_logged_in() && current_user_can('administrator')) {
+		echo '</div>';
+	}
+?>
